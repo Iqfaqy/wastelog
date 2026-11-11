@@ -259,6 +259,50 @@ http://localhost:8000
 
 ---
 
+### ☁️ Panduan Deploy ke Vercel (Online)
+
+Aplikasi WasteLog sudah dilengkapi konfigurasi serverless (`vercel.json` dan `api/index.php`) sehingga dapat langsung dideploy ke **Vercel**.
+
+> **Penting Mengenai Database di Vercel:**  
+> Vercel adalah platform *serverless* (tidak menyediakan database lokal MySQL di dalamnya). Oleh karena itu, untuk online di Vercel, aplikasi membutuhkan database MySQL Cloud (dapat menggunakan layanan gratis seperti **Aiven**, **TiDB Cloud**, **Clever Cloud**, atau **Railway**).
+
+#### **Langkah 1: Siapkan Database MySQL Cloud (Gratis)**
+1. Buat database MySQL gratis di salah satu penyedia:
+   - **Aiven for MySQL** (aiven.io) — Free Tier
+   - **TiDB Cloud Serverless** (tidbcloud.com) — Free Tier
+   - **Clever Cloud** (clever-cloud.com) — Free MySQL Add-on
+2. Buka phpMyAdmin / tools query di cloud tersebut, lalu impor berkas `database/wastelog_db.sql`.
+3. Catat kredensial koneksi: `Host`, `Port`, `Database Name`, `User`, dan `Password`.
+
+#### **Langkah 2: Upload Proyek ke GitHub**
+1. Inisialisasi Git di folder proyek:
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit WasteLog"
+   ```
+2. Buat repository baru di [GitHub](https://github.com/new).
+3. Hubungkan dan push kode Anda ke GitHub:
+   ```bash
+   git remote add origin https://github.com/username-anda/wastelog.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+#### **Langkah 3: Deploy di Vercel**
+1. Buka [Vercel](https://vercel.com) dan login menggunakan akun GitHub Anda.
+2. Klik tombol **Add New...** -> **Project**.
+3. Pilih repository `wastelog` yang telah di-push.
+4. Pada bagian **Environment Variables**, tambahkan variabel database cloud Anda:
+   - `DB_HOST`: *(Host MySQL Cloud Anda)*
+   - `DB_PORT`: `3306` *(atau sesuai port cloud)*
+   - `DB_NAME`: `wastelog_db`
+   - `DB_USER`: *(Username MySQL Cloud)*
+   - `DB_PASS`: *(Password MySQL Cloud)*
+5. Klik **Deploy**! Vercel akan otomatis meng-compile dan memberikan URL publik aplikasi Anda (contoh: `https://wastelog.vercel.app`).
+
+---
+
 ## 🔑 9. Akun Default Administrator
 
 Gunakan akun berikut untuk masuk ke sistem:

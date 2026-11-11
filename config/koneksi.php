@@ -3,37 +3,47 @@
  * WasteLog - Konfigurasi Database & Helper Functions
  */
 
-// Konfigurasi Database
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'wastelog_db');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+// Konfigurasi Database (Mendukung Vercel Cloud Database & Localhost XAMPP)
+define('DB_HOST', getenv('DB_HOST') ?: (getenv('MYSQL_HOST') ?: 'localhost'));
+define('DB_PORT', getenv('DB_PORT') ?: (getenv('MYSQL_PORT') ?: '3306'));
+define('DB_NAME', getenv('DB_NAME') ?: (getenv('MYSQL_DATABASE') ?: 'wastelog_db'));
+define('DB_USER', getenv('DB_USER') ?: (getenv('MYSQL_USER') ?: 'root'));
+define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : (getenv('MYSQL_PASSWORD') !== false ? getenv('MYSQL_PASSWORD') : ''));
 
 if (!defined('BASE_URL')) {
-    $docRoot = !empty($_SERVER['DOCUMENT_ROOT']) ? str_replace('\\', '/', realpath($_SERVER['DOCUMENT_ROOT']) ?: '') : '';
-    $appDir  = str_replace('\\', '/', realpath(__DIR__ . '/..') ?: '');
-    $subDir  = ($docRoot !== '' && str_starts_with($appDir, $docRoot)) ? trim(substr($appDir, strlen($docRoot)), '/') : 'wastelog';
-    define('BASE_URL', $subDir !== '' ? '/' . $subDir : '');
+    if (getenv('VERCEL') || isset($_SERVER['VERCEL'])) {
+        define('BASE_URL', '');
+    } else {
+        $docRoot = !empty($_SERVER['DOCUMENT_ROOT']) ? str_replace('\\', '/', realpath($_SERVER['DOCUMENT_ROOT']) ?: '') : '';
+        $appDir  = str_replace('\\', '/', realpath(__DIR__ . '/..') ?: '');
+        $subDir  = ($docRoot !== '' && str_starts_with($appDir, $docRoot)) ? trim(substr($appDir, strlen($docRoot)), '/') : 'wastelog';
+        define('BASE_URL', $subDir !== '' ? '/' . $subDir : '');
+    }
 }
 define('APP_NAME', 'WasteLog');
 
 // Koneksi PDO
 try {
-    $pdo = new PDO(
-        "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4",
-        DB_USER, DB_PASS,
-        [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES   => false,
-        ]
-    );
+    $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+    $options = [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+    ];
+    $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
 } catch (PDOException $e) {
     die("Koneksi database gagal: " . $e->getMessage());
 }
 
-// Session
+// Session (pastikan folder writable di lingkungan serverless Vercel)
 if (session_status() === PHP_SESSION_NONE) {
+    if (getenv('VERCEL') || isset($_SERVER['VERCEL'])) {
+        $sessDir = '/tmp/sessions';
+        if (!is_dir($sessDir)) {
+            @mkdir($sessDir, 0777, true);
+        }
+        @session_save_path($sessDir);
+    }
     session_start();
 }
 
